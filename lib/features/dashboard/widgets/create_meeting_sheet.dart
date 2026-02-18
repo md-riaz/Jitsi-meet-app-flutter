@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:alora_meet/app/routes.dart';
 import 'package:alora_meet/core/models/meeting.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
 import 'package:alora_meet/core/services/permission_service.dart';
@@ -118,7 +119,13 @@ class _CreateMeetingSheetState extends State<CreateMeetingSheet> {
         creatorEmail: storageService.settings.email,
       );
 
+      // Close the bottom sheet
       Navigator.pop(context);
+
+      // Navigate to meeting screen before joining
+      if (mounted) {
+        await Navigator.pushNamed(context, AppRoutes.meeting);
+      }
 
       await meetingService.joinMeeting(
         meeting: meeting,
