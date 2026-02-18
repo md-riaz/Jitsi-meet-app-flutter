@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 
 import 'package:alora_meet/core/models/meeting.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
+import 'package:alora_meet/core/services/permission_service.dart';
 import 'package:alora_meet/core/services/storage_service.dart';
+import 'package:alora_meet/shared/utils/dialog_utils.dart';
 
 class JoinMeetingSheet extends StatefulWidget {
   const JoinMeetingSheet({super.key});
@@ -17,6 +19,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
   final _roomController = TextEditingController();
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _permissionService = PermissionService();
   bool _audioMuted = false;
   bool _videoMuted = false;
 
@@ -48,38 +51,76 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
     return trimmed;
   }
 
-  void _joinMeeting() {
+  Future<void> _joinMeeting() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final storageService =
-        Provider.of<StorageService>(context, listen: false);
-    final meetingService =
-        Provider.of<MeetingService>(context, listen: false);
+    try {
+      // Check and request permissions
+      final permissionResult = await _permissionService.requestMeetingPermissions();
+      
+      if (!permissionResult.granted) {
+        if (!mounted) return;
+        
+        final retry = await DialogUtils.showPermissionDeniedDialog(
+          context,
+          message: permissionResult.errorMessage,
+          isPermanentlyDenied: permissionResult.permanentlyDenied,
+        );
+        
+        // If user wants to retry (not permanently denied), try again
+        if (retry == true && mounted) {
+          await _joinMeeting();
+        }
+        return;
+      }
 
-    final roomName = _extractRoomName(_roomController.text);
-    final settings = storageService.settings.copyWith(
-      displayName: _nameController.text.trim(),
-      startWithAudioMuted: _audioMuted,
-      startWithVideoMuted: _videoMuted,
-    );
+      if (!mounted) return;
 
-    final meeting = Meeting.create(
-      roomName: roomName,
-      password: _passwordController.text.isNotEmpty
-          ? _passwordController.text
-          : null,
-      serverURL: storageService.settings.serverURL,
-      creatorName: _nameController.text.trim(),
-      creatorEmail: storageService.settings.email,
-    );
+      final storageService = Provider.of<StorageService>(context, listen: false);
+      final meetingService = Provider.of<MeetingService>(context, listen: false);
 
-    Navigator.pop(context);
+      final roomName = _extractRoomName(_roomController.text);
+      final settings = storageService.settings.copyWith(
+        displayName: _nameController.text.trim(),
+        startWithAudioMuted: _audioMuted,
+        startWithVideoMuted: _videoMuted,
+      );
 
-    meetingService.joinMeeting(
-      meeting: meeting,
-      settings: settings,
-      storageService: storageService,
-    );
+      final meeting = Meeting.create(
+        roomName: roomName,
+        password: _passwordController.text.isNotEmpty
+            ? _passwordController.text
+            : null,
+        serverURL: storageService.settings.serverURL,
+        creatorName: _nameController.text.trim(),
+        creatorEmail: storageService.settings.email,
+      );
+
+      Navigator.pop(context);
+
+      await meetingService.joinMeeting(
+        meeting: meeting,
+        settings: settings,
+        storageService: storageService,
+        onError: (error) {
+          if (mounted) {
+            DialogUtils.showErrorDialog(
+              context,
+              title: 'Failed to Join Meeting',
+              message: 'Could not join the meeting. Please check your internet connection and try again.\n\nError: $error',
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      
+      DialogUtils.showErrorDialog(
+        context,
+        title: 'Error',
+        message: 'An unexpected error occurred: ${e.toString()}',
+      );
+    }
   }
 
   @override

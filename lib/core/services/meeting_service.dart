@@ -27,56 +27,93 @@ class MeetingService extends ChangeNotifier {
     required Meeting meeting,
     required AppSettings settings,
     required StorageService storageService,
+    Function(String error)? onError,
   }) async {
-    _isInMeeting = true;
-    _currentRoomName = meeting.roomName;
-    _currentMeeting = meeting;
-    _participantCount = 0;
-    notifyListeners();
+    try {
+      _isInMeeting = true;
+      _currentRoomName = meeting.roomName;
+      _currentMeeting = meeting;
+      _participantCount = 0;
+      notifyListeners();
 
-    await storageService.addMeeting(meeting);
+      await storageService.addMeeting(meeting);
 
-    await _jitsiService.joinMeeting(
-      meeting: meeting,
-      settings: settings,
-      onConferenceJoined: (url) {
-        _meetingStartTime = DateTime.now();
-        notifyListeners();
-      },
-      onConferenceTerminated: (url) async {
-        int? durationMinutes;
-        if (_meetingStartTime != null) {
-          final duration = DateTime.now().difference(_meetingStartTime!);
-          durationMinutes = duration.inMinutes;
-        }
-
-        final updatedMeeting = meeting.copyWith(
-          durationMinutes: durationMinutes,
-        );
-        await storageService.updateMeeting(updatedMeeting);
-
-        _isInMeeting = false;
-        _currentRoomName = null;
-        _currentMeeting = null;
-        _meetingStartTime = null;
-        _participantCount = 0;
-        notifyListeners();
-      },
-      onParticipantJoined: (data) {
-        _participantCount++;
-        notifyListeners();
-      },
-      onParticipantLeft: (data) {
-        if (_participantCount > 0) {
-          _participantCount--;
+      await _jitsiService.joinMeeting(
+        meeting: meeting,
+        settings: settings,
+        onConferenceJoined: (url) {
+          _meetingStartTime = DateTime.now();
           notifyListeners();
-        }
-      },
-    );
+        },
+        onConferenceTerminated: (url) async {
+          try {
+            int? durationMinutes;
+            if (_meetingStartTime != null) {
+              final duration = DateTime.now().difference(_meetingStartTime!);
+              durationMinutes = duration.inMinutes;
+            }
+
+            final updatedMeeting = meeting.copyWith(
+              durationMinutes: durationMinutes,
+            );
+            await storageService.updateMeeting(updatedMeeting);
+          } catch (e) {
+            // Log but don't fail if we can't update meeting history
+            debugPrint('Error updating meeting history: $e');
+          } finally {
+            _isInMeeting = false;
+            _currentRoomName = null;
+            _currentMeeting = null;
+            _meetingStartTime = null;
+            _participantCount = 0;
+            notifyListeners();
+          }
+        },
+        onParticipantJoined: (data) {
+          _participantCount++;
+          notifyListeners();
+        },
+        onParticipantLeft: (data) {
+          if (_participantCount > 0) {
+            _participantCount--;
+            notifyListeners();
+          }
+        },
+        onError: (error) {
+          _isInMeeting = false;
+          _currentRoomName = null;
+          _currentMeeting = null;
+          _participantCount = 0;
+          notifyListeners();
+          onError?.call(error);
+        },
+      );
+    } catch (e) {
+      _isInMeeting = false;
+      _currentRoomName = null;
+      _currentMeeting = null;
+      _participantCount = 0;
+      notifyListeners();
+      
+      final errorMessage = e.toString();
+      onError?.call(errorMessage);
+      rethrow;
+    }
   }
 
   Future<void> leaveMeeting() async {
-    await _jitsiService.hangUp();
+    try {
+      await _jitsiService.hangUp();
+    } catch (e) {
+      debugPrint('Error leaving meeting: $e');
+      // Even if hangUp fails, reset the state
+      _isInMeeting = false;
+      _currentRoomName = null;
+      _currentMeeting = null;
+      _meetingStartTime = null;
+      _participantCount = 0;
+      notifyListeners();
+    }
   }
 
   String generateRoomName() {

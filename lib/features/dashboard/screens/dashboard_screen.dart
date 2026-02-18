@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:alora_meet/app/routes.dart';
 import 'package:alora_meet/core/models/meeting.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
+import 'package:alora_meet/core/services/permission_service.dart';
 import 'package:alora_meet/core/services/storage_service.dart';
 import 'package:alora_meet/features/dashboard/widgets/create_meeting_sheet.dart';
 import 'package:alora_meet/features/dashboard/widgets/join_meeting_sheet.dart';
 import 'package:alora_meet/features/dashboard/widgets/meeting_history_card.dart';
+import 'package:alora_meet/shared/utils/dialog_utils.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,6 +21,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
+  final _permissionService = PermissionService();
 
   String get _greeting {
     final hour = DateTime.now().hour;
@@ -62,27 +65,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _rejoinMeeting(Meeting meeting) {
-    final storageService =
-        Provider.of<StorageService>(context, listen: false);
-    final meetingService =
-        Provider.of<MeetingService>(context, listen: false);
-    final settings = storageService.settings;
+  Future<void> _rejoinMeeting(Meeting meeting) async {
+    try {
+      // Check and request permissions
+      final permissionResult = await _permissionService.requestMeetingPermissions();
+      
+      if (!permissionResult.granted) {
+        if (!mounted) return;
+        
+        final retry = await DialogUtils.showPermissionDeniedDialog(
+          context,
+          message: permissionResult.errorMessage,
+          isPermanentlyDenied: permissionResult.permanentlyDenied,
+        );
+        
+        // If user wants to retry (not permanently denied), try again
+        if (retry == true && mounted) {
+          await _rejoinMeeting(meeting);
+        }
+        return;
+      }
 
-    final newMeeting = Meeting.create(
-      roomName: meeting.roomName,
-      subject: meeting.subject,
-      password: meeting.password,
-      serverURL: meeting.serverURL,
-      creatorName: settings.displayName,
-      creatorEmail: settings.email,
-    );
+      if (!mounted) return;
 
-    meetingService.joinMeeting(
-      meeting: newMeeting,
-      settings: settings,
-      storageService: storageService,
-    );
+      final storageService = Provider.of<StorageService>(context, listen: false);
+      final meetingService = Provider.of<MeetingService>(context, listen: false);
+      final settings = storageService.settings;
+
+      final newMeeting = Meeting.create(
+        roomName: meeting.roomName,
+        subject: meeting.subject,
+        password: meeting.password,
+        serverURL: meeting.serverURL,
+        creatorName: settings.displayName,
+        creatorEmail: settings.email,
+      );
+
+      await meetingService.joinMeeting(
+        meeting: newMeeting,
+        settings: settings,
+        storageService: storageService,
+        onError: (error) {
+          if (mounted) {
+            DialogUtils.showErrorDialog(
+              context,
+              title: 'Failed to Join Meeting',
+              message: 'Could not rejoin the meeting. Please check your internet connection and try again.\n\nError: $error',
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      
+      DialogUtils.showErrorDialog(
+        context,
+        title: 'Error',
+        message: 'An unexpected error occurred: ${e.toString()}',
+      );
+    }
   }
 
   @override
