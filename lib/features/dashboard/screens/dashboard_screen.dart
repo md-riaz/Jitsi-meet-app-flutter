@@ -115,6 +115,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         creatorEmail: settings.email,
       );
 
+      // Navigate to meeting screen before joining
+      if (mounted) {
+        await Navigator.pushNamed(context, AppRoutes.meeting);
+      }
+
       await meetingService.joinMeeting(
         meeting: newMeeting,
         settings: settings,
