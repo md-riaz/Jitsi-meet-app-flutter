@@ -21,7 +21,7 @@ class Meeting {
     this.password,
     required this.createdAt,
     this.scheduledFor,
-    this.serverURL = 'https://meet.jit.si',
+    this.serverURL = 'https://app.alorameet.com',
     this.creatorName,
     this.creatorEmail,
     this.durationMinutes,
@@ -32,7 +32,7 @@ class Meeting {
     String? subject,
     String? password,
     DateTime? scheduledFor,
-    String serverURL = 'https://meet.jit.si',
+    String serverURL = 'https://app.alorameet.com',
     String? creatorName,
     String? creatorEmail,
   }) {
@@ -100,7 +100,7 @@ class Meeting {
       scheduledFor: json['scheduledFor'] != null
           ? DateTime.parse(json['scheduledFor'] as String)
           : null,
-      serverURL: json['serverURL'] as String? ?? 'https://meet.jit.si',
+      serverURL: json['serverURL'] as String? ?? 'https://app.alorameet.com',
       creatorName: json['creatorName'] as String?,
       creatorEmail: json['creatorEmail'] as String?,
       durationMinutes: json['durationMinutes'] as int?,

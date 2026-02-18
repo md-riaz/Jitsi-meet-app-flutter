@@ -4,7 +4,9 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:alora_meet/core/models/meeting.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
+import 'package:alora_meet/core/services/permission_service.dart';
 import 'package:alora_meet/core/services/storage_service.dart';
+import 'package:alora_meet/shared/utils/dialog_utils.dart';
 
 class CreateMeetingSheet extends StatefulWidget {
   const CreateMeetingSheet({super.key});
@@ -18,8 +20,11 @@ class _CreateMeetingSheetState extends State<CreateMeetingSheet> {
   final _subjectController = TextEditingController();
   final _roomController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _permissionService = PermissionService();
   bool _audioMuted = false;
   bool _videoMuted = false;
+  int _permissionRetryCount = 0;
+  static const int _maxPermissionRetries = 2;
 
   @override
   void initState() {
@@ -56,41 +61,88 @@ class _CreateMeetingSheetState extends State<CreateMeetingSheet> {
     Share.share('Join my meeting "$subject": $_meetingLink');
   }
 
-  void _createAndJoin() {
+  Future<void> _createAndJoin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final storageService =
-        Provider.of<StorageService>(context, listen: false);
-    final meetingService =
-        Provider.of<MeetingService>(context, listen: false);
+    try {
+      // Check and request permissions
+      final permissionResult = await _permissionService.requestMeetingPermissions();
+      
+      if (!permissionResult.granted) {
+        if (!mounted) return;
+        
+        _permissionRetryCount++;
+        
+        final retry = await DialogUtils.showPermissionDeniedDialog(
+          context,
+          message: permissionResult.errorMessage,
+          isPermanentlyDenied: permissionResult.permanentlyDenied,
+        );
+        
+        // If user wants to retry and haven't exceeded max retries, try again
+        if (retry == true && _permissionRetryCount < _maxPermissionRetries && mounted) {
+          await _createAndJoin();
+        } else if (_permissionRetryCount >= _maxPermissionRetries && mounted) {
+          // Show a different message after max retries
+          DialogUtils.showErrorDialog(
+            context,
+            title: 'Permissions Required',
+            message: 'Camera and microphone permissions are required to create meetings. Please enable them in device settings.',
+          );
+        }
+        return;
+      }
 
-    final subject = _subjectController.text.trim().isNotEmpty
-        ? _subjectController.text.trim()
-        : 'Alora Meet';
+      if (!mounted) return;
 
-    final settings = storageService.settings.copyWith(
-      startWithAudioMuted: _audioMuted,
-      startWithVideoMuted: _videoMuted,
-    );
+      final storageService = Provider.of<StorageService>(context, listen: false);
+      final meetingService = Provider.of<MeetingService>(context, listen: false);
 
-    final meeting = Meeting.create(
-      roomName: _roomController.text.trim(),
-      subject: subject,
-      password: _passwordController.text.isNotEmpty
-          ? _passwordController.text
-          : null,
-      serverURL: storageService.settings.serverURL,
-      creatorName: storageService.settings.displayName,
-      creatorEmail: storageService.settings.email,
-    );
+      final subject = _subjectController.text.trim().isNotEmpty
+          ? _subjectController.text.trim()
+          : 'Alora Meet';
 
-    Navigator.pop(context);
+      final settings = storageService.settings.copyWith(
+        startWithAudioMuted: _audioMuted,
+        startWithVideoMuted: _videoMuted,
+      );
 
-    meetingService.joinMeeting(
-      meeting: meeting,
-      settings: settings,
-      storageService: storageService,
-    );
+      final meeting = Meeting.create(
+        roomName: _roomController.text.trim(),
+        subject: subject,
+        password: _passwordController.text.isNotEmpty
+            ? _passwordController.text
+            : null,
+        serverURL: storageService.settings.serverURL,
+        creatorName: storageService.settings.displayName,
+        creatorEmail: storageService.settings.email,
+      );
+
+      Navigator.pop(context);
+
+      await meetingService.joinMeeting(
+        meeting: meeting,
+        settings: settings,
+        storageService: storageService,
+        onError: (error) {
+          if (mounted) {
+            DialogUtils.showErrorDialog(
+              context,
+              title: 'Failed to Create Meeting',
+              message: 'Could not create the meeting. Please check your internet connection and try again.\n\nError: $error',
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      
+      DialogUtils.showErrorDialog(
+        context,
+        title: 'Error',
+        message: 'An unexpected error occurred: ${e.toString()}',
+      );
+    }
   }
 
   @override

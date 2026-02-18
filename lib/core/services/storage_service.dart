@@ -66,33 +66,67 @@ class StorageService extends ChangeNotifier {
   }
 
   Future<void> addMeeting(Meeting meeting) async {
-    _meetingHistory.insert(0, meeting);
-    if (_meetingHistory.length > _maxMeetingHistory) {
-      _meetingHistory = _meetingHistory.sublist(0, _maxMeetingHistory);
+    try {
+      _meetingHistory.insert(0, meeting);
+      if (_meetingHistory.length > _maxMeetingHistory) {
+        _meetingHistory = _meetingHistory.sublist(0, _maxMeetingHistory);
+      }
+      await _saveMeetings();
+      notifyListeners();
+    } catch (e) {
+      // Rollback on error
+      _meetingHistory.removeWhere((m) => m.id == meeting.id);
+      notifyListeners();
+      rethrow;
     }
-    await _saveMeetings();
-    notifyListeners();
   }
 
   Future<void> updateMeeting(Meeting meeting) async {
     final index = _meetingHistory.indexWhere((m) => m.id == meeting.id);
     if (index != -1) {
-      _meetingHistory[index] = meeting;
-      await _saveMeetings();
-      notifyListeners();
+      final oldMeeting = _meetingHistory[index];
+      try {
+        _meetingHistory[index] = meeting;
+        await _saveMeetings();
+        notifyListeners();
+      } catch (e) {
+        // Rollback on error
+        _meetingHistory[index] = oldMeeting;
+        notifyListeners();
+        rethrow;
+      }
     }
   }
 
   Future<void> deleteMeeting(String meetingId) async {
-    _meetingHistory.removeWhere((m) => m.id == meetingId);
-    await _saveMeetings();
-    notifyListeners();
+    final index = _meetingHistory.indexWhere((m) => m.id == meetingId);
+    if (index != -1) {
+      final removedMeeting = _meetingHistory[index];
+      try {
+        _meetingHistory.removeAt(index);
+        await _saveMeetings();
+        notifyListeners();
+      } catch (e) {
+        // Rollback on error
+        _meetingHistory.insert(index, removedMeeting);
+        notifyListeners();
+        rethrow;
+      }
+    }
   }
 
   Future<void> clearHistory() async {
-    _meetingHistory.clear();
-    await _saveMeetings();
-    notifyListeners();
+    final oldHistory = List<Meeting>.from(_meetingHistory);
+    try {
+      _meetingHistory.clear();
+      await _saveMeetings();
+      notifyListeners();
+    } catch (e) {
+      // Rollback on error
+      _meetingHistory = oldHistory;
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> resetSettings() async {

@@ -17,7 +17,7 @@ void main() {
 
     test('default settings are AppSettings defaults', () {
       final settings = service.settings;
-      expect(settings.serverURL, 'https://meet.jit.si');
+      expect(settings.serverURL, 'https://app.alorameet.com');
       expect(settings.language, 'en');
       expect(settings.darkMode, true);
       expect(settings.displayName, 'Alora User');

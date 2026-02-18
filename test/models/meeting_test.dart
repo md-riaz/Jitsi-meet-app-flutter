@@ -30,7 +30,7 @@ void main() {
 
       test('uses default serverURL when not provided', () {
         final meeting = Meeting.create(roomName: 'room');
-        expect(meeting.serverURL, 'https://meet.jit.si');
+        expect(meeting.serverURL, 'https://app.alorameet.com');
       });
 
       test('sets optional fields to null when not provided', () {
@@ -142,7 +142,7 @@ void main() {
 
         expect(meeting.id, 'min-id');
         expect(meeting.roomName, 'minimal-room');
-        expect(meeting.serverURL, 'https://meet.jit.si');
+        expect(meeting.serverURL, 'https://app.alorameet.com');
         expect(meeting.subject, isNull);
         expect(meeting.password, isNull);
         expect(meeting.scheduledFor, isNull);
@@ -166,7 +166,7 @@ void main() {
         };
         final meeting = Meeting.fromJson(json);
 
-        expect(meeting.serverURL, 'https://meet.jit.si');
+        expect(meeting.serverURL, 'https://app.alorameet.com');
         expect(meeting.subject, isNull);
         expect(meeting.password, isNull);
         expect(meeting.scheduledFor, isNull);
