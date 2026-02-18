@@ -44,7 +44,7 @@ class DialogUtils {
   }
 
   /// Show a permission denied dialog with option to open settings.
-  static Future<void> showPermissionDeniedDialog(
+  static Future<bool?> showPermissionDeniedDialog(
     BuildContext context, {
     required String message,
     required bool isPermanentlyDenied,
