@@ -11,7 +11,8 @@ class PermissionService {
     ];
 
     // Check Bluetooth permission for Android 12+ (API level 31+)
-    if (await Permission.bluetoothConnect.isRestricted == false) {
+    // Only add if the permission is supported on the current platform
+    if (!await Permission.bluetoothConnect.isRestricted) {
       permissions.add(Permission.bluetoothConnect);
     }
 
@@ -54,7 +55,7 @@ class PermissionService {
     
     // For older Android versions, bluetooth permission might not be available
     bool bluetooth = true;
-    if (await Permission.bluetoothConnect.isRestricted == false) {
+    if (!await Permission.bluetoothConnect.isRestricted) {
       bluetooth = await Permission.bluetoothConnect.isGranted;
     }
 

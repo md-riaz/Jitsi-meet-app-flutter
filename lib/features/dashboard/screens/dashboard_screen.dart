@@ -22,6 +22,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   final _permissionService = PermissionService();
+  int _permissionRetryCount = 0;
+  static const int _maxPermissionRetries = 2;
 
   String get _greeting {
     final hour = DateTime.now().hour;
@@ -67,11 +69,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _rejoinMeeting(Meeting meeting) async {
     try {
+      // Reset retry count for new meeting attempt
+      _permissionRetryCount = 0;
+      
       // Check and request permissions
       final permissionResult = await _permissionService.requestMeetingPermissions();
       
       if (!permissionResult.granted) {
         if (!mounted) return;
+        
+        _permissionRetryCount++;
         
         final retry = await DialogUtils.showPermissionDeniedDialog(
           context,
@@ -79,9 +86,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           isPermanentlyDenied: permissionResult.permanentlyDenied,
         );
         
-        // If user wants to retry (not permanently denied), try again
-        if (retry == true && mounted) {
+        // If user wants to retry and haven't exceeded max retries, try again
+        if (retry == true && _permissionRetryCount < _maxPermissionRetries && mounted) {
           await _rejoinMeeting(meeting);
+        } else if (_permissionRetryCount >= _maxPermissionRetries && mounted) {
+          // Show a different message after max retries
+          DialogUtils.showErrorDialog(
+            context,
+            title: 'Permissions Required',
+            message: 'Camera and microphone permissions are required to join meetings. Please enable them in device settings.',
+          );
         }
         return;
       }

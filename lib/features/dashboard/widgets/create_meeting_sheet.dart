@@ -23,6 +23,8 @@ class _CreateMeetingSheetState extends State<CreateMeetingSheet> {
   final _permissionService = PermissionService();
   bool _audioMuted = false;
   bool _videoMuted = false;
+  int _permissionRetryCount = 0;
+  static const int _maxPermissionRetries = 2;
 
   @override
   void initState() {
@@ -69,15 +71,24 @@ class _CreateMeetingSheetState extends State<CreateMeetingSheet> {
       if (!permissionResult.granted) {
         if (!mounted) return;
         
+        _permissionRetryCount++;
+        
         final retry = await DialogUtils.showPermissionDeniedDialog(
           context,
           message: permissionResult.errorMessage,
           isPermanentlyDenied: permissionResult.permanentlyDenied,
         );
         
-        // If user wants to retry (not permanently denied), try again
-        if (retry == true && mounted) {
+        // If user wants to retry and haven't exceeded max retries, try again
+        if (retry == true && _permissionRetryCount < _maxPermissionRetries && mounted) {
           await _createAndJoin();
+        } else if (_permissionRetryCount >= _maxPermissionRetries && mounted) {
+          // Show a different message after max retries
+          DialogUtils.showErrorDialog(
+            context,
+            title: 'Permissions Required',
+            message: 'Camera and microphone permissions are required to create meetings. Please enable them in device settings.',
+          );
         }
         return;
       }
