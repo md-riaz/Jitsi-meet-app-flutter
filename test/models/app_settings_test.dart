@@ -75,7 +75,7 @@ void main() {
       });
 
       test('deep copies configOverrides when not overridden', () {
-        final original = AppSettings(
+        const original = AppSettings(
           configOverrides: {'key': 'value'},
         );
         final copied = original.copyWith();
@@ -96,7 +96,7 @@ void main() {
 
     group('toJson / fromJson', () {
       test('round-trip serialization', () {
-        final original = AppSettings(
+        const original = AppSettings(
           serverURL: 'https://my.server.com',
           language: 'fr',
           darkMode: false,
