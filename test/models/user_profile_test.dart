@@ -84,7 +84,7 @@ void main() {
 
     group('toJson / fromJson', () {
       test('round-trip serialization', () {
-        final now = DateTime(2025, 6, 1, 10, 0);
+        final now = DateTime(2025, 6, 1, 10);
         final original = UserProfile(
           id: 'profile-123',
           displayName: 'Alice',

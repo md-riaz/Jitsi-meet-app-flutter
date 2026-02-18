@@ -23,10 +23,7 @@ class AppTheme {
         secondary: _secondaryColor,
         surface: _darkSurface,
         error: _errorColor,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
         onSurface: _onDarkBackground,
-        onError: Colors.white,
       ),
       scaffoldBackgroundColor: _darkBackground,
       textTheme: GoogleFonts.interTextTheme(
@@ -63,7 +60,7 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1E3A5F), width: 1),
+          borderSide: const BorderSide(color: Color(0xFF1E3A5F)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -71,7 +68,7 @@ class AppTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _errorColor, width: 1),
+          borderSide: const BorderSide(color: _errorColor),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -121,9 +118,7 @@ class AppTheme {
         surface: _lightSurface,
         error: _errorColor,
         onPrimary: Colors.white,
-        onSecondary: Colors.white,
         onSurface: _onLightBackground,
-        onError: Colors.white,
       ),
       scaffoldBackgroundColor: _lightBackground,
       textTheme: GoogleFonts.interTextTheme(
@@ -160,7 +155,7 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

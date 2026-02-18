@@ -5,7 +5,7 @@ void main() {
   group('Meeting', () {
     group('Meeting.create()', () {
       test('creates meeting with all fields', () {
-        final scheduled = DateTime(2025, 6, 15, 14, 0);
+        final scheduled = DateTime(2025, 6, 15, 14);
         final meeting = Meeting.create(
           roomName: 'test-room',
           subject: 'Daily Standup',
@@ -109,7 +109,7 @@ void main() {
           roomName: 'test-room',
           subject: 'Sync',
           password: 'pass',
-          createdAt: DateTime(2025, 1, 1),
+          createdAt: DateTime(2025, 1),
           scheduledFor: scheduled,
           serverURL: 'https://custom.jit.si',
           creatorName: 'Charlie',
