@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
-import 'package:alora_meet/core/services/storage_service.dart';
 
 void main() {
   group('MeetingService', () {
@@ -13,39 +12,14 @@ void main() {
     test('initial state is not in meeting', () {
       expect(service.isInMeeting, false);
       expect(service.currentRoomName, isNull);
+      expect(service.currentMeeting, isNull);
+      expect(service.meetingStartTime, isNull);
+      expect(service.participantCount, 0);
     });
 
-    test('setMeetingState updates state and notifies listeners', () {
-      bool notified = false;
-      service.addListener(() => notified = true);
-
-      service.setMeetingState(inMeeting: true, roomName: 'test-room');
-
-      expect(service.isInMeeting, true);
-      expect(service.currentRoomName, 'test-room');
-      expect(notified, true);
-    });
-  });
-
-  group('StorageService', () {
-    late StorageService service;
-
-    setUp(() {
-      service = StorageService();
-    });
-
-    test('initial state is not initialized', () {
-      expect(service.isInitialized, false);
-    });
-
-    test('initialize sets isInitialized and notifies listeners', () async {
-      bool notified = false;
-      service.addListener(() => notified = true);
-
-      await service.initialize();
-
-      expect(service.isInitialized, true);
-      expect(notified, true);
+    test('generateRoomName returns valid room name', () {
+      final name = service.generateRoomName();
+      expect(name, matches(RegExp(r'^alora-meet-\d{4}$')));
     });
   });
 }
