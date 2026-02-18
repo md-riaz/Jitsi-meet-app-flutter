@@ -22,7 +22,7 @@ class AppSettings {
   final Map<String, dynamic> configOverrides;
 
   const AppSettings({
-    this.serverURL = 'https://meet.jit.si',
+    this.serverURL = 'https://app.alorameet.com',
     this.language = 'en',
     this.darkMode = true,
     this.displayName = 'Alora User',
@@ -198,7 +198,7 @@ class AppSettings {
     }
 
     return AppSettings(
-      serverURL: json['serverURL'] as String? ?? 'https://meet.jit.si',
+      serverURL: json['serverURL'] as String? ?? 'https://app.alorameet.com',
       language: json['language'] as String? ?? 'en',
       darkMode: json['darkMode'] as bool? ?? true,
       displayName: json['displayName'] as String? ?? 'Alora User',

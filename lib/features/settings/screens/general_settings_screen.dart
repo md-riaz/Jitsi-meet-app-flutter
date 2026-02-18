@@ -77,7 +77,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             TextFormField(
               controller: _serverUrlController,
               decoration: const InputDecoration(
-                hintText: 'https://meet.jit.si',
+                hintText: 'https://app.alorameet.com',
                 prefixIcon: Icon(Icons.dns_outlined),
               ),
               keyboardType: TextInputType.url,
@@ -89,7 +89,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 if (uri == null ||
                     !uri.isAbsolute ||
                     (!uri.scheme.startsWith('http'))) {
-                  return 'Enter a valid URL (e.g. https://meet.jit.si)';
+                  return 'Enter a valid URL (e.g. https://app.alorameet.com)';
                 }
                 return null;
               },

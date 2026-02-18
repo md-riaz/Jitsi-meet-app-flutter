@@ -7,7 +7,7 @@ void main() {
       test('has correct default values', () {
         final settings = AppSettings.defaultSettings();
 
-        expect(settings.serverURL, 'https://meet.jit.si');
+        expect(settings.serverURL, 'https://app.alorameet.com');
         expect(settings.language, 'en');
         expect(settings.darkMode, true);
         expect(settings.displayName, 'Alora User');
@@ -148,7 +148,7 @@ void main() {
       test('fromJson with empty map uses all defaults', () {
         final settings = AppSettings.fromJson({});
 
-        expect(settings.serverURL, 'https://meet.jit.si');
+        expect(settings.serverURL, 'https://app.alorameet.com');
         expect(settings.language, 'en');
         expect(settings.darkMode, true);
         expect(settings.displayName, 'Alora User');
