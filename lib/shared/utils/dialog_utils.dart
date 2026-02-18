@@ -49,7 +49,7 @@ class DialogUtils {
     required String message,
     required bool isPermanentlyDenied,
   }) async {
-    if (!context.mounted) return;
+    if (!context.mounted) return null;
 
     return showDialog(
       context: context,
