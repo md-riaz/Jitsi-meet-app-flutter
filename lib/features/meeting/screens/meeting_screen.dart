@@ -152,7 +152,12 @@ class MeetingScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => meetingService.leaveMeeting(),
+                  onPressed: () async {
+                    await meetingService.leaveMeeting();
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
                   icon: const Icon(Icons.call_end_rounded),
                   label: const Text('Leave Meeting'),
                   style: ElevatedButton.styleFrom(

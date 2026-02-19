@@ -46,6 +46,9 @@ android {
 
     buildTypes {
         release {
+            // Temporary: disable R8 until we have proper keep rules for release.
+            minifyEnabled false
+            shrinkResources false
             signingConfig = signingConfigs.debug
         }
     }
