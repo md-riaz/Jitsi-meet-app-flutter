@@ -40,6 +40,9 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  ios: false
-  image_path: assets/appicon/alora.png
+  ios: true
+  image_path: assets/icons/meet.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/meet.png"
+  adaptive_icon_monochrome: assets/icons/meet.png
   remove_alpha_ios: true
