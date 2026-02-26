@@ -205,7 +205,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
                 controller: _roomController,
                 decoration: const InputDecoration(
                   labelText: 'Room name or link',
-                  hintText: 'e.g. my-meeting or https://meet.jit.si/room',
+                  hintText: 'meeting-name or https://app.alorameet.com/meetingname',
                   prefixIcon: Icon(Icons.meeting_room_outlined),
                 ),
                 textInputAction: TextInputAction.next,
