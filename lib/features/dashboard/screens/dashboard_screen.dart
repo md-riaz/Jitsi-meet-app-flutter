@@ -11,6 +11,7 @@ import 'package:alora_meet/features/dashboard/widgets/create_meeting_sheet.dart'
 import 'package:alora_meet/features/dashboard/widgets/join_meeting_sheet.dart';
 import 'package:alora_meet/features/dashboard/widgets/meeting_history_card.dart';
 import 'package:alora_meet/shared/utils/dialog_utils.dart';
+import 'package:alora_meet/shared/widgets/main_bottom_nav.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,7 +21,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _currentIndex = 0;
   final _permissionService = PermissionService();
   int _permissionRetryCount = 0;
   static const int _maxPermissionRetries = 2;
@@ -30,23 +30,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
-  }
-
-  void _onNavTap(int index) {
-    switch (index) {
-      case 0:
-        setState(() => _currentIndex = 0);
-        break;
-      case 1:
-        Navigator.pushNamed(context, AppRoutes.history);
-        break;
-      case 2:
-        Navigator.pushNamed(context, AppRoutes.settings);
-        break;
-      case 3:
-        Navigator.pushNamed(context, AppRoutes.profile);
-        break;
-    }
   }
 
   void _showJoinSheet() {
@@ -152,6 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -172,20 +156,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Consumer<StorageService>(
               builder: (context, storage, _) {
                 final name = storage.settings.displayName;
+                final avatarURL = storage.settings.avatarURL;
+                final hasAvatar =
+                    avatarURL != null && avatarURL.isNotEmpty;
                 return GestureDetector(
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.profile),
                   child: CircleAvatar(
                     radius: 18,
                     backgroundColor: colorScheme.primary.withAlpha(40),
-                    child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : 'A',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
+                    child: hasAvatar
+                        ? ClipOval(
+                            child: Image.network(
+                              avatarURL!,
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Text(
+                                name.isNotEmpty
+                                    ? name[0].toUpperCase()
+                                    : 'A',
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : 'A',
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
                   ),
                 );
               },
@@ -208,32 +214,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history_outlined),
-            activeIcon: Icon(Icons.history_rounded),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings_rounded),
-            label: 'Settings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
-          ),
-        ],
-      ),
+      bottomNavigationBar: const MainBottomNav(currentIndex: 0),
     );
   }
 

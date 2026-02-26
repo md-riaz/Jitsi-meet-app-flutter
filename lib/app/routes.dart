@@ -3,7 +3,7 @@ import 'package:alora_meet/features/dashboard/screens/dashboard_screen.dart';
 import 'package:alora_meet/features/meeting/screens/meeting_screen.dart';
 import 'package:alora_meet/features/settings/screens/settings_screen.dart';
 import 'package:alora_meet/features/history/screens/history_screen.dart';
-import 'package:alora_meet/features/profile/screens/profile_screen.dart';
+import 'package:alora_meet/features/settings/screens/profile_settings_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -20,7 +20,7 @@ class AppRoutes {
       meeting: (_) => const MeetingScreen(),
       settings: (_) => const SettingsScreen(),
       history: (_) => const HistoryScreen(),
-      profile: (_) => const ProfileScreen(),
+      profile: (_) => const ProfileSettingsScreen(),
     };
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:alora_meet/core/services/storage_service.dart';
+import 'package:alora_meet/shared/widgets/main_bottom_nav.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -62,6 +63,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
+      bottomNavigationBar: const MainBottomNav(currentIndex: 3),
       body: Form(
         key: _formKey,
         child: ListView(
