@@ -125,7 +125,7 @@ class _AdvancedSettingsScreenState extends State<AdvancedSettingsScreen> {
               )),
           const SizedBox(height: 4),
           Text(
-            'Add custom Jitsi configuration as JSON',
+            'Add custom Alora Meet configuration as JSON',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(153),
             ),

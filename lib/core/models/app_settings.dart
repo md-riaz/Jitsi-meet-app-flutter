@@ -78,7 +78,7 @@ class AppSettings {
       'add-people.enabled': true,
       'breakout-rooms.enabled': true,
       'audio-only.enabled': false,
-      'unsaferoomwarning.enabled': true,
+      'unsaferoomwarning.enabled': false,
       'fullscreen.enabled': true,
     };
   }

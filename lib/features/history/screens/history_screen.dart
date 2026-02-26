@@ -5,6 +5,7 @@ import 'package:alora_meet/core/models/meeting.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
 import 'package:alora_meet/core/services/storage_service.dart';
 import 'package:alora_meet/features/history/widgets/history_meeting_tile.dart';
+import 'package:alora_meet/shared/widgets/main_bottom_nav.dart';
 
 enum _SortOption { date, duration, name }
 
@@ -120,6 +121,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meeting History'),
+        automaticallyImplyLeading: false,
         actions: [
           Consumer<StorageService>(
             builder: (context, storage, _) {
@@ -133,6 +135,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const MainBottomNav(currentIndex: 1),
       body: Consumer<StorageService>(
         builder: (context, storage, _) {
           final allMeetings = storage.meetingHistory;

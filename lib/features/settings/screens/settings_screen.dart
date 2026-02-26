@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:alora_meet/core/services/storage_service.dart';
 import 'package:alora_meet/features/settings/screens/general_settings_screen.dart';
@@ -8,6 +9,7 @@ import 'package:alora_meet/features/settings/screens/audio_video_settings_screen
 import 'package:alora_meet/features/settings/screens/feature_flags_screen.dart';
 import 'package:alora_meet/features/settings/screens/advanced_settings_screen.dart';
 import 'package:alora_meet/features/settings/widgets/settings_section_tile.dart';
+import 'package:alora_meet/shared/widgets/main_bottom_nav.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -37,7 +39,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
+        automaticallyImplyLeading: false,
       ),
+      bottomNavigationBar: const MainBottomNav(currentIndex: 2),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -83,8 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SettingsSectionTile(
                   icon: Icons.dns_outlined,
                   title: 'General',
-                  subtitle:
-                      '${settings.serverURL} · ${_languageName(settings.language)}',
+                   subtitle: settings.serverURL,
                   trailing: Icon(Icons.chevron_right,
                       color: theme.colorScheme.onSurface.withAlpha(102)),
                   onTap: () => _navigate(
@@ -181,6 +184,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
+          // Support & Legal
+          if (_matches('help') ||
+              _matches('terms') ||
+              _matches('privacy') ||
+              _matches('support') ||
+              _searchQuery.isEmpty)
+            _buildSection(
+              context,
+              header: 'Support & Legal',
+              children: [
+                SettingsSectionTile(
+                  icon: Icons.help_outline,
+                  title: 'Help',
+                  subtitle: 'Contact & support',
+                  trailing: Icon(Icons.open_in_new,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withAlpha(102)),
+                  onTap: () => _launchUrl(
+                      context, 'https://www.alorameet.com/Contact.html'),
+                ),
+                SettingsSectionTile(
+                  icon: Icons.description_outlined,
+                  title: 'Terms of Service',
+                  subtitle: 'View our terms',
+                  trailing: Icon(Icons.open_in_new,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withAlpha(102)),
+                  onTap: () => _launchUrl(context,
+                      'https://www.alorameet.com/Legal/Terms.html'),
+                ),
+                SettingsSectionTile(
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Privacy Policy',
+                  subtitle: 'View our privacy policy',
+                  trailing: Icon(Icons.open_in_new,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withAlpha(102)),
+                  onTap: () => _launchUrl(context,
+                      'https://www.alorameet.com/Legal/Privacy.html'),
+                ),
+              ],
+            ),
+
+          const SizedBox(height: 24),
+
           // Reset button
           if (_matches('reset') || _searchQuery.isEmpty)
             Padding(
@@ -236,6 +284,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _launchUrl(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Unable to open link. Please check your internet connection or try again later.',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _confirmReset(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -269,20 +332,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  String _languageName(String code) {
-    const names = {
-      'en': 'English',
-      'es': 'Español',
-      'fr': 'Français',
-      'de': 'Deutsch',
-      'pt': 'Português',
-      'zh': '中文',
-      'ja': '日本語',
-      'ko': '한국어',
-      'ar': 'العربية',
-      'hi': 'हिन्दी',
-      'ru': 'Русский',
-    };
-    return names[code] ?? code;
-  }
 }

@@ -25,7 +25,14 @@ class _FeatureFlagsScreenState extends State<FeatureFlagsScreen> {
     'Other': Icons.more_horiz,
   };
 
+  static const _customLabels = <String, String>{
+    'livestreaming.enabled': 'Live Streaming',
+    'unsaferoomwarning.enabled': 'Unsafe Room Warning',
+    'welcomepage.enabled': 'Welcome Page',
+  };
+
   String _readableLabel(String key) {
+    if (_customLabels.containsKey(key)) return _customLabels[key]!;
     return key
         .replaceAll('.enabled', '')
         .replaceAll('.', ' ')

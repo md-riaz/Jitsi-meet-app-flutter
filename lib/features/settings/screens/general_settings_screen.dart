@@ -15,19 +15,19 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
   late TextEditingController _serverUrlController;
   bool _initialized = false;
 
-  static const _languages = {
-    'en': 'English',
-    'es': 'Español',
-    'fr': 'Français',
-    'de': 'Deutsch',
-    'pt': 'Português',
-    'zh': '中文',
-    'ja': '日本語',
-    'ko': '한국어',
-    'ar': 'العربية',
-    'hi': 'हिन्दी',
-    'ru': 'Русский',
-  };
+  // static const _languages = {
+  //   'en': 'English',
+  //   'es': 'Español',
+  //   'fr': 'Français',
+  //   'de': 'Deutsch',
+  //   'pt': 'Português',
+  //   'zh': '中文',
+  //   'ja': '日本語',
+  //   'ko': '한국어',
+  //   'ar': 'العربية',
+  //   'hi': 'हिन्दी',
+  //   'ru': 'Русский',
+  // };
 
   @override
   void didChangeDependencies() {
@@ -123,29 +123,29 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
 
             const Divider(height: 32),
 
-            // Language
-            Text('Language',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                )),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: settings.language,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.language),
-              ),
-              items: _languages.entries
-                  .map((e) => DropdownMenuItem(
-                        value: e.key,
-                        child: Text(e.value),
-                      ))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) _save(context, language: v);
-              },
-            ),
+            // Language - currently not functional, temporarily disabled
+            // Text('Language',
+            //     style: theme.textTheme.labelLarge?.copyWith(
+            //       fontWeight: FontWeight.w600,
+            //     )),
+            // const SizedBox(height: 8),
+            // DropdownButtonFormField<String>(
+            //   value: settings.language,
+            //   decoration: const InputDecoration(
+            //     prefixIcon: Icon(Icons.language),
+            //   ),
+            //   items: _languages.entries
+            //       .map((e) => DropdownMenuItem(
+            //             value: e.key,
+            //             child: Text(e.value),
+            //           ))
+            //       .toList(),
+            //   onChanged: (v) {
+            //     if (v != null) _save(context, language: v);
+            //   },
+            // ),
 
-            const Divider(height: 32),
+            // const Divider(height: 32),
 
             // Theme
             SwitchListTile(
