@@ -16,6 +16,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late TextEditingController _displayNameController;
   late TextEditingController _emailController;
   late TextEditingController _avatarUrlController;
+  late TextEditingController _apiTokenController;
   bool _initialized = false;
 
   @override
@@ -27,6 +28,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       _emailController = TextEditingController(text: settings.email);
       _avatarUrlController =
           TextEditingController(text: settings.avatarURL ?? '');
+      _apiTokenController = TextEditingController(
+        text: context.read<StorageService>().apiToken ?? '',
+      );
       _initialized = true;
     }
   }
@@ -36,6 +40,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     _displayNameController.dispose();
     _emailController.dispose();
     _avatarUrlController.dispose();
+    _apiTokenController.dispose();
     super.dispose();
   }
 
@@ -49,6 +54,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       avatarURL: avatarText.isEmpty ? null : avatarText,
     );
     await storage.saveSettings(updated);
+    await storage.saveApiToken(_apiTokenController.text.trim());
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile saved')),
@@ -163,6 +169,23 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 prefixIcon: Icon(Icons.image_outlined),
               ),
               keyboardType: TextInputType.url,
+            ),
+
+            const SizedBox(height: 20),
+
+            // API Token (for /api/v1 authenticated join/list)
+            Text('Jitsi Admin API Token',
+                style: theme.textTheme.labelLarge
+                    ?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _apiTokenController,
+              decoration: const InputDecoration(
+                hintText: 'Paste Bearer token from /api/v1/auth/login',
+                prefixIcon: Icon(Icons.vpn_key_outlined),
+              ),
+              maxLines: 2,
+              minLines: 1,
             ),
 
             const SizedBox(height: 32),

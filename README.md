@@ -7,7 +7,8 @@ A production-grade Flutter wrapper for Jitsi Meet, offering seamless video confe
 ## Features
 
 - **Dashboard** — Join, create, or schedule meetings from a single hub
-- **Join Meeting** — By room code, full URL, or QR scan
+- **Join Meeting** — By room code, full URL, meeting UUID, or QR scan
+- **Jitsi Admin v1 API Support** — Join via backend-authorized payload (`/api/v1`) with JWT
 - **Create Meeting** — Set subject, password, and share link instantly
 - **Meeting History** — Searchable, sortable, with one-tap rejoin
 - **Profile** — Display name, email, avatar with activity stats
@@ -32,6 +33,8 @@ lib/
 │   │   └── user_profile.dart
 │   └── services/            # Business logic
 │       ├── storage_service.dart
+│       ├── api_client.dart
+│       ├── jitsi_admin_api_service.dart
 │       ├── jitsi_service.dart
 │       └── meeting_service.dart
 ├── features/
@@ -52,6 +55,23 @@ lib/
 - iOS: Platform 15.1+
 
 ### Getting Started
+
+### Backend API (optional but recommended)
+
+For Jitsi Admin integration:
+
+- Set **Server URL** in app settings to your app base path (example: `https://openclaw.mdriaz.com.bd/jitsiadmin`)
+- Paste API Bearer token in **Profile > Jitsi Admin API Token**
+  - token is obtained from: `POST {SERVER_URL}/api/v1/auth/login`
+- In Join sheet, provide a meeting UUID to trigger backend join flow (`/api/v1/meetings/{id}/join`)
+
+If no token is present, app attempts guest join path (`/api/v1/meetings/{id}/join-guest`) for public meetings.
+
+Invite-only + admission flow:
+- Paste invite token in Join sheet (optional field)
+- App resolves/accepts token before guest join
+- If `ERR_ADMISSION_REQUIRED`, app polls `/api/v1/meetings/{id}/admission-status` until admitted/rejected
+
 
 ```bash
 # Clone the repository

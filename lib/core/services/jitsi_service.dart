@@ -38,6 +38,7 @@ class JitsiService {
       final options = JitsiMeetConferenceOptions(
         serverURL: serverURL,
         room: meeting.roomName,
+        token: meeting.jwt,
         configOverrides: configOverrides,
         featureFlags: featureFlags,
         userInfo: JitsiMeetUserInfo(

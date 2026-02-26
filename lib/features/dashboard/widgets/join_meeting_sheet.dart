@@ -6,6 +6,8 @@ import 'package:alora_meet/core/models/meeting.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
 import 'package:alora_meet/core/services/permission_service.dart';
 import 'package:alora_meet/core/services/storage_service.dart';
+import 'package:alora_meet/core/services/api_client.dart';
+import 'package:alora_meet/core/services/jitsi_admin_api_service.dart';
 import 'package:alora_meet/shared/utils/dialog_utils.dart';
 
 class JoinMeetingSheet extends StatefulWidget {
@@ -20,6 +22,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
   final _roomController = TextEditingController();
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _inviteTokenController = TextEditingController();
   final _permissionService = PermissionService();
   bool _audioMuted = false;
   bool _videoMuted = false;
@@ -41,6 +44,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
     _roomController.dispose();
     _nameController.dispose();
     _passwordController.dispose();
+    _inviteTokenController.dispose();
     super.dispose();
   }
 
@@ -52,6 +56,48 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
       return uri.pathSegments.last;
     }
     return trimmed;
+  }
+
+  String _apiBaseFromServer(String serverUrl) {
+    final root = serverUrl.endsWith('/') ? serverUrl.substring(0, serverUrl.length - 1) : serverUrl;
+    return '$root/api/v1';
+  }
+
+  String? _extractMeetingId(String input) {
+    final trimmed = input.trim();
+    final uri = Uri.tryParse(trimmed);
+    final target = (uri != null && uri.pathSegments.isNotEmpty) ? uri.pathSegments.last : trimmed;
+
+    final uuidReg = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+    return uuidReg.hasMatch(target) ? target : null;
+  }
+
+  Future<bool?> _waitForAdmission({
+    required BuildContext context,
+    required JitsiAdminApiService apiService,
+    required String meetingId,
+    required String participantId,
+  }) async {
+    if (!mounted) return null;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(const SnackBar(content: Text('Waiting for host approval...')));
+
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(seconds: 3));
+      try {
+        final status = await apiService.getAdmissionStatus(
+          meetingId: meetingId,
+          participantId: participantId,
+        );
+        if (status == 'admitted') return true;
+        if (status == 'rejected') return false;
+      } catch (_) {
+        // keep polling briefly
+      }
+    }
+
+    return null;
   }
 
   Future<void> _joinMeeting() async {
@@ -91,22 +137,117 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
       final storageService = Provider.of<StorageService>(context, listen: false);
       final meetingService = Provider.of<MeetingService>(context, listen: false);
 
-      final roomName = _extractRoomName(_roomController.text);
+      final roomInput = _roomController.text;
+      final roomName = _extractRoomName(roomInput);
+      final meetingId = _extractMeetingId(roomInput);
+
       final settings = storageService.settings.copyWith(
         displayName: _nameController.text.trim(),
         startWithAudioMuted: _audioMuted,
         startWithVideoMuted: _videoMuted,
       );
 
-      final meeting = Meeting.create(
-        roomName: roomName,
-        password: _passwordController.text.isNotEmpty
-            ? _passwordController.text
-            : null,
-        serverURL: storageService.settings.serverURL,
-        creatorName: _nameController.text.trim(),
-        creatorEmail: storageService.settings.email,
-      );
+      Meeting? meeting;
+
+      if (meetingId != null) {
+        final apiBase = _apiBaseFromServer(storageService.settings.serverURL);
+        final apiClient = ApiClient(
+          baseUrl: apiBase,
+          bearerToken: storageService.apiToken,
+        );
+        final apiService = JitsiAdminApiService(apiClient);
+
+        try {
+          final inviteToken = _inviteTokenController.text.trim();
+
+          // Optional invite pre-accept for invite-only flows.
+          if (inviteToken.isNotEmpty) {
+            await apiService.resolveInviteToken(inviteToken);
+            await apiService.acceptInviteToken(
+              token: inviteToken,
+              name: _nameController.text.trim(),
+              email: storageService.settings.email,
+            );
+          }
+
+          meeting = storageService.apiToken != null && storageService.apiToken!.isNotEmpty
+              ? await apiService.joinByMeetingId(
+                  meetingId: meetingId,
+                  password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+                  inviteToken: inviteToken.isNotEmpty ? inviteToken : null,
+                )
+              : await apiService.joinGuestByMeetingId(
+                  meetingId: meetingId,
+                  inviteToken: inviteToken.isNotEmpty ? inviteToken : null,
+                  displayName: _nameController.text.trim(),
+                  email: storageService.settings.email,
+                );
+        } on ApiException catch (e) {
+          if (!mounted) return;
+
+          if (e.code == 'ERR_ADMISSION_REQUIRED') {
+            final participantId = (e.details?['pending_participant_id'] ?? '').toString();
+            if (participantId.isNotEmpty) {
+              final approved = await _waitForAdmission(
+                context: context,
+                apiService: apiService,
+                meetingId: meetingId,
+                participantId: participantId,
+              );
+
+              if (approved != true) {
+                DialogUtils.showErrorDialog(
+                  context,
+                  title: 'Admission status',
+                  message: approved == null
+                      ? 'Still waiting for host approval.'
+                      : 'Join request was rejected by host.',
+                );
+                return;
+              }
+
+              // Retry actual join after admission.
+              meeting = storageService.apiToken != null && storageService.apiToken!.isNotEmpty
+                  ? await apiService.joinByMeetingId(meetingId: meetingId)
+                  : await apiService.joinGuestByMeetingId(
+                      meetingId: meetingId,
+                      inviteToken: _inviteTokenController.text.trim().isNotEmpty
+                          ? _inviteTokenController.text.trim()
+                          : null,
+                      displayName: _nameController.text.trim(),
+                      email: storageService.settings.email,
+                    );
+            }
+          } else {
+            DialogUtils.showErrorDialog(
+              context,
+              title: 'Join denied',
+              message: e.toString(),
+            );
+            return;
+          }
+        }
+      } else {
+        meeting = Meeting.create(
+          roomName: roomName,
+          password: _passwordController.text.isNotEmpty
+              ? _passwordController.text
+              : null,
+          serverURL: storageService.settings.serverURL,
+          creatorName: _nameController.text.trim(),
+          creatorEmail: storageService.settings.email,
+        );
+      }
+
+      if (meeting == null) {
+        if (!mounted) return;
+        DialogUtils.showErrorDialog(
+          context,
+          title: 'Join denied',
+          message: 'Could not prepare meeting join payload.',
+        );
+        return;
+      }
 
       final navigator = Navigator.of(context);
       final dialogContext = navigator.context;
@@ -204,8 +345,8 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
               TextFormField(
                 controller: _roomController,
                 decoration: const InputDecoration(
-                  labelText: 'Room name or link',
-                  hintText: 'meeting-name or https://app.alorameet.com/meetingname',
+                  labelText: 'Room / Meeting ID / link',
+                  hintText: 'room-name or meeting-uuid or full link',
                   prefixIcon: Icon(Icons.meeting_room_outlined),
                 ),
                 textInputAction: TextInputAction.next,
@@ -237,6 +378,17 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 16),
+              // Invite token (optional)
+              TextFormField(
+                controller: _inviteTokenController,
+                decoration: const InputDecoration(
+                  labelText: 'Invite token (optional)',
+                  hintText: 'Required for invite-only guest flow',
+                  prefixIcon: Icon(Icons.confirmation_num_outlined),
+                ),
                 textInputAction: TextInputAction.done,
               ),
               const SizedBox(height: 20),

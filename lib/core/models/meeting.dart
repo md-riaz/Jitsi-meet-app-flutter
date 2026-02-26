@@ -13,6 +13,8 @@ class Meeting {
   final String? creatorName;
   final String? creatorEmail;
   final int? durationMinutes;
+  final String? jwt;
+  final String? sourceMeetingId;
 
   const Meeting({
     required this.id,
@@ -25,6 +27,8 @@ class Meeting {
     this.creatorName,
     this.creatorEmail,
     this.durationMinutes,
+    this.jwt,
+    this.sourceMeetingId,
   });
 
   factory Meeting.create({
@@ -35,6 +39,8 @@ class Meeting {
     String serverURL = 'https://app.alorameet.com',
     String? creatorName,
     String? creatorEmail,
+    String? jwt,
+    String? sourceMeetingId,
   }) {
     return Meeting(
       id: _uuid.v4(),
@@ -46,6 +52,8 @@ class Meeting {
       serverURL: serverURL,
       creatorName: creatorName,
       creatorEmail: creatorEmail,
+      jwt: jwt,
+      sourceMeetingId: sourceMeetingId,
     );
   }
 
@@ -60,6 +68,8 @@ class Meeting {
     String? creatorName,
     String? creatorEmail,
     int? durationMinutes,
+    String? jwt,
+    String? sourceMeetingId,
   }) {
     return Meeting(
       id: id ?? this.id,
@@ -72,6 +82,8 @@ class Meeting {
       creatorName: creatorName ?? this.creatorName,
       creatorEmail: creatorEmail ?? this.creatorEmail,
       durationMinutes: durationMinutes ?? this.durationMinutes,
+      jwt: jwt ?? this.jwt,
+      sourceMeetingId: sourceMeetingId ?? this.sourceMeetingId,
     );
   }
 
@@ -87,6 +99,8 @@ class Meeting {
       'creatorName': creatorName,
       'creatorEmail': creatorEmail,
       'durationMinutes': durationMinutes,
+      'jwt': jwt,
+      'sourceMeetingId': sourceMeetingId,
     };
   }
 
@@ -104,6 +118,8 @@ class Meeting {
       creatorName: json['creatorName'] as String?,
       creatorEmail: json['creatorEmail'] as String?,
       durationMinutes: json['durationMinutes'] as int?,
+      jwt: json['jwt'] as String?,
+      sourceMeetingId: json['sourceMeetingId'] as String?,
     );
   }
 }

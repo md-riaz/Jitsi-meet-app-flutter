@@ -15,6 +15,7 @@ class StorageService extends ChangeNotifier {
   static const String _settingsKey = 'app_settings';
   static const String _profileKey = 'user_profile';
   static const String _meetingsKey = 'meeting_history';
+  static const String _apiTokenKey = 'api_token';
 
   static const int _maxMeetingHistory = 100;
 
@@ -26,11 +27,13 @@ class StorageService extends ChangeNotifier {
   UserProfile? _profile;
   List<Meeting> _meetingHistory = [];
   bool _isInitialized = false;
+  String? _apiToken;
 
   AppSettings get settings => _settings;
   UserProfile? get profile => _profile;
   List<Meeting> get meetingHistory => List.unmodifiable(_meetingHistory);
   bool get isInitialized => _isInitialized;
+  String? get apiToken => _apiToken;
 
   Future<void> initialize() async {
     _settingsBoxInstance = await Hive.openBox(_settingsBox);
@@ -40,6 +43,7 @@ class StorageService extends ChangeNotifier {
     _settings = _loadSettings();
     _profile = _loadProfile();
     _meetingHistory = _loadMeetings();
+    _apiToken = _settingsBoxInstance.get(_apiTokenKey) as String?;
 
     if (_profile == null) {
       _profile = UserProfile.create();
@@ -135,6 +139,16 @@ class StorageService extends ChangeNotifier {
       _settingsKey,
       jsonEncode(_settings.toJson()),
     );
+    notifyListeners();
+  }
+
+  Future<void> saveApiToken(String? token) async {
+    _apiToken = token;
+    if (token == null || token.isEmpty) {
+      await _settingsBoxInstance.delete(_apiTokenKey);
+    } else {
+      await _settingsBoxInstance.put(_apiTokenKey, token);
+    }
     notifyListeners();
   }
 
