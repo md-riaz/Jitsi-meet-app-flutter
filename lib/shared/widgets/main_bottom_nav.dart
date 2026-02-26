@@ -10,9 +10,14 @@ class MainBottomNav extends StatelessWidget {
   void _onTap(BuildContext context, int index) {
     if (index == currentIndex) return;
 
+    // Capture the NavigatorState before popUntil so the subsequent pushNamed
+    // call does not use a BuildContext that may have been deactivated after the
+    // pop removes the current route from the tree.
+    final navigator = Navigator.of(context);
+
     // Navigate back to the dashboard root (or the first route if dashboard is
     // not in the stack) to keep a clean navigation stack.
-    Navigator.popUntil(context, (route) {
+    navigator.popUntil((route) {
       return route.settings.name == AppRoutes.dashboard || route.isFirst;
     });
 
@@ -20,13 +25,13 @@ class MainBottomNav extends StatelessWidget {
 
     switch (index) {
       case 1:
-        Navigator.pushNamed(context, AppRoutes.history);
+        navigator.pushNamed(AppRoutes.history);
         break;
       case 2:
-        Navigator.pushNamed(context, AppRoutes.settings);
+        navigator.pushNamed(AppRoutes.settings);
         break;
       case 3:
-        Navigator.pushNamed(context, AppRoutes.profile);
+        navigator.pushNamed(AppRoutes.profile);
         break;
     }
   }
