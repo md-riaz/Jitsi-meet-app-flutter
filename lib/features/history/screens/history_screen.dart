@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:alora_meet/app/routes.dart';
 import 'package:alora_meet/core/models/meeting.dart';
 import 'package:alora_meet/core/services/meeting_service.dart';
 import 'package:alora_meet/core/services/storage_service.dart';
 import 'package:alora_meet/features/history/widgets/history_meeting_tile.dart';
+import 'package:alora_meet/shared/utils/dialog_utils.dart';
 import 'package:alora_meet/shared/widgets/main_bottom_nav.dart';
 
 enum _SortOption { date, duration, name }
@@ -73,11 +75,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
       creatorEmail: settings.email,
     );
 
+    final navigator = Navigator.of(context);
+
+    // Start the join first so MeetingScreen sees active state immediately.
     meetingService.joinMeeting(
       meeting: newMeeting,
       settings: settings,
       storageService: storageService,
+      onError: (error) {
+        if (navigator.mounted) {
+          DialogUtils.showErrorDialog(
+            navigator.context,
+            title: 'Failed to Join Meeting',
+            message: 'Could not rejoin the meeting. Please check your internet connection and try again.\n\nError: $error',
+          );
+        }
+      },
     );
+
+    // Navigate to meeting screen without waiting for it to pop.
+    if (navigator.mounted) {
+      navigator.pushNamed(AppRoutes.meeting);
+    }
   }
 
   void _confirmClearAll() {

@@ -233,12 +233,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (_matches('reset') || _searchQuery.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: OutlinedButton.icon(
+              child: ElevatedButton.icon(
                 icon: const Icon(Icons.restore),
                 label: const Text('Reset to Defaults'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                  side: BorderSide(color: theme.colorScheme.error),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

@@ -98,25 +98,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         creatorEmail: settings.email,
       );
 
-      // Navigate to meeting screen before joining
-      if (mounted) {
-        await Navigator.pushNamed(context, AppRoutes.meeting);
-      }
+      final navigator = Navigator.of(context);
 
-      await meetingService.joinMeeting(
+      // Start the join first so MeetingScreen sees active state immediately.
+      final joinFuture = meetingService.joinMeeting(
         meeting: newMeeting,
         settings: settings,
         storageService: storageService,
         onError: (error) {
-          if (mounted) {
+          if (navigator.mounted) {
             DialogUtils.showErrorDialog(
-              context,
+              navigator.context,
               title: 'Failed to Join Meeting',
               message: 'Could not rejoin the meeting. Please check your internet connection and try again.\n\nError: $error',
             );
           }
         },
       );
+
+      // Navigate to meeting screen without waiting for it to pop.
+      if (navigator.mounted) {
+        navigator.pushNamed(AppRoutes.meeting);
+      }
+
+      // Await join so errors propagate to catch.
+      await joinFuture;
     } catch (e) {
       if (!mounted) return;
       
