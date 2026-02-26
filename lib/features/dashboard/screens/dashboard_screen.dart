@@ -162,9 +162,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Consumer<StorageService>(
               builder: (context, storage, _) {
                 final name = storage.settings.displayName;
-                final avatarURL = storage.settings.avatarURL;
-                final hasAvatar =
-                    avatarURL != null && avatarURL.isNotEmpty;
+                final avatarURL = storage.settings.avatarURL ?? '';
+                final hasAvatar = avatarURL.isNotEmpty;
                 return GestureDetector(
                   onTap: () =>
                       Navigator.pushNamed(context, AppRoutes.profile),
@@ -174,7 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: hasAvatar
                         ? ClipOval(
                             child: Image.network(
-                              avatarURL!,
+                              avatarURL,
                               width: 36,
                               height: 36,
                               fit: BoxFit.cover,

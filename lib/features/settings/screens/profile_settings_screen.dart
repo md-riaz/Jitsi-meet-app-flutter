@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:alora_meet/core/services/storage_service.dart';
+import 'package:alora_meet/core/services/api_client.dart';
+import 'package:alora_meet/core/services/jitsi_admin_api_service.dart';
 import 'package:alora_meet/shared/widgets/main_bottom_nav.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
@@ -17,7 +19,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late TextEditingController _emailController;
   late TextEditingController _avatarUrlController;
   late TextEditingController _apiTokenController;
+  late TextEditingController _authEmailController;
+  late TextEditingController _authPasswordController;
   bool _initialized = false;
+  bool _authLoading = false;
 
   @override
   void didChangeDependencies() {
@@ -31,6 +36,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       _apiTokenController = TextEditingController(
         text: context.read<StorageService>().apiToken ?? '',
       );
+      _authEmailController = TextEditingController(text: settings.email);
+      _authPasswordController = TextEditingController();
       _initialized = true;
     }
   }
@@ -41,6 +48,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     _emailController.dispose();
     _avatarUrlController.dispose();
     _apiTokenController.dispose();
+    _authEmailController.dispose();
+    _authPasswordController.dispose();
     super.dispose();
   }
 
@@ -60,6 +69,63 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         const SnackBar(content: Text('Profile saved')),
       );
     }
+  }
+
+  String _apiBaseFromServer(String serverUrl) {
+    final root = serverUrl.endsWith('/')
+        ? serverUrl.substring(0, serverUrl.length - 1)
+        : serverUrl;
+    return '$root/api/v1';
+  }
+
+  Future<void> _loginApiToken() async {
+    final email = _authEmailController.text.trim();
+    final password = _authPasswordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email and password are required')),
+      );
+      return;
+    }
+
+    setState(() => _authLoading = true);
+    try {
+      final storage = context.read<StorageService>();
+      final apiClient = ApiClient(baseUrl: _apiBaseFromServer(storage.settings.serverURL));
+      final api = JitsiAdminApiService(apiClient);
+
+      final token = await api.login(email: email, password: password);
+      await storage.saveApiToken(token);
+      _apiTokenController.text = token;
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('API login successful. Token saved.')),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: ${e.toString()}')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login failed. Please retry.')),
+      );
+    } finally {
+      if (mounted) setState(() => _authLoading = false);
+    }
+  }
+
+  Future<void> _logoutApiToken() async {
+    final storage = context.read<StorageService>();
+    await storage.saveApiToken(null);
+    _apiTokenController.clear();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('API token cleared')),
+    );
   }
 
   @override
@@ -172,6 +238,53 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             ),
 
             const SizedBox(height: 20),
+
+            Text('Jitsi Admin API Login',
+                style: theme.textTheme.labelLarge
+                    ?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _authEmailController,
+              decoration: const InputDecoration(
+                hintText: 'API account email',
+                prefixIcon: Icon(Icons.alternate_email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _authPasswordController,
+              decoration: const InputDecoration(
+                hintText: 'API account password',
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _authLoading ? null : _loginApiToken,
+                    icon: _authLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.login),
+                    label: Text(_authLoading ? 'Logging in...' : 'Login & Save Token'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: _logoutApiToken,
+                  child: const Text('Clear'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
 
             // API Token (for /api/v1 authenticated join/list)
             Text('Jitsi Admin API Token',

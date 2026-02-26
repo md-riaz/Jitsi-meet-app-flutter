@@ -40,7 +40,6 @@ class PermissionService {
     if (deniedPermissions.isNotEmpty) {
       return PermissionResult(
         granted: false,
-        permanentlyDenied: false,
         deniedPermissions: _formatPermissions(deniedPermissions),
       );
     }

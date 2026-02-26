@@ -61,8 +61,9 @@ lib/
 For Jitsi Admin integration:
 
 - Set **Server URL** in app settings to your app base path (example: `https://openclaw.mdriaz.com.bd/jitsiadmin`)
-- Paste API Bearer token in **Profile > Jitsi Admin API Token**
-  - token is obtained from: `POST {SERVER_URL}/api/v1/auth/login`
+- In **Profile** use **Jitsi Admin API Login** (email/password) to fetch and save token automatically
+  - endpoint: `POST {SERVER_URL}/api/v1/auth/login`
+- Manual token paste still supported in **Profile > Jitsi Admin API Token**
 - In Join sheet, provide a meeting UUID to trigger backend join flow (`/api/v1/meetings/{id}/join`)
 
 If no token is present, app attempts guest join path (`/api/v1/meetings/{id}/join-guest`) for public meetings.

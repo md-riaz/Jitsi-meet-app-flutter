@@ -196,6 +196,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
               );
 
               if (approved != true) {
+                if (!mounted) return;
                 DialogUtils.showErrorDialog(
                   context,
                   title: 'Admission status',
@@ -219,6 +220,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
                     );
             }
           } else {
+            if (!mounted) return;
             DialogUtils.showErrorDialog(
               context,
               title: 'Join denied',
@@ -249,6 +251,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
         return;
       }
 
+      if (!mounted) return;
       final navigator = Navigator.of(context);
       final dialogContext = navigator.context;
 
@@ -279,6 +282,7 @@ class _JoinMeetingSheetState extends State<JoinMeetingSheet> {
       // Await join so errors propagate to catch.
       await joinFuture;
     } catch (e) {
+      if (!mounted) return;
       final navigator = Navigator.of(context);
       if (!navigator.mounted) return;
 

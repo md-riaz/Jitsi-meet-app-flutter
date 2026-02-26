@@ -109,7 +109,7 @@ void main() {
           roomName: 'test-room',
           subject: 'Sync',
           password: 'pass',
-          createdAt: DateTime(2025, 1),
+          createdAt: DateTime(2025),
           scheduledFor: scheduled,
           serverURL: 'https://custom.jit.si',
           creatorName: 'Charlie',

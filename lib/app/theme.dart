@@ -43,7 +43,7 @@ class AppTheme {
           color: _onDarkBackground,
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: _darkSurface,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -115,10 +115,7 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: _primaryColor,
         secondary: _secondaryColor,
-        surface: _lightSurface,
         error: _errorColor,
-        onPrimary: Colors.white,
-        onSurface: _onLightBackground,
       ),
       scaffoldBackgroundColor: _lightBackground,
       textTheme: GoogleFonts.interTextTheme(
@@ -138,7 +135,7 @@ class AppTheme {
           color: _onLightBackground,
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: _lightSurface,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -163,7 +160,7 @@ class AppTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _errorColor, width: 1),
+          borderSide: const BorderSide(color: _errorColor),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
